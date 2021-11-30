@@ -1,6 +1,6 @@
 # Coordinated Proximal Policy Optimization
 
-This repository implements Coordinated Proximal Policy Optimization (CoPPO),  accompanying paper "[Coordinated Proximal Policy Optimization]([[2111.04051\] Coordinated Proximal Policy Optimization (arxiv.org)](https://arxiv.org/abs/2111.04051))". 
+This repository implements Coordinated Proximal Policy Optimization (CoPPO),  accompanying paper "[Coordinated Proximal Policy Optimization](https://arxiv.org/abs/2111.04051)". 
 
 ## Requirements
 
