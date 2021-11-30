@@ -15,7 +15,7 @@ pip install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pyto
 
 ```
 # install the package
-cd CoPPO
+cd Coordinated-PPO
 pip install -e .
 ```
 
