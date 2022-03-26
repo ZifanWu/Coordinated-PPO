@@ -164,13 +164,6 @@ def get_config():
     parser.add_argument('--if_double_clip', type=bool, default=True)
     parser.add_argument('--double_clip_inner_eps', type=float, default=0.10)
 
-    parser.add_argument('--if_prod_ratio', type=bool, default=True)
-    parser.add_argument('--use_clip_param_decay', action='store_true', default=False)
-    parser.add_argument('--clip_param_anneal_steps', type=float, default=4e6)
-    parser.add_argument('--prcl_max_clip_param', type=float, default=0.20)
-    parser.add_argument('--prcl_curr_clip_param', default=0.20)
-    parser.add_argument('--prcl_min_clip_param', type=float, default=0.10)
-
     parser.add_argument('--clip_before_prod', type=bool, default=False)
     parser.add_argument('--clpr_clip_param', type=float, default=0.10)
 
