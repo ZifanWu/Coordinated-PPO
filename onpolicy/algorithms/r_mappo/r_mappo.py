@@ -132,45 +132,27 @@ class R_MAPPO():
                                                                             active_masks_batch)
         imp_weights = torch.exp(action_log_probs - old_action_log_probs_batch)
         if self.args.if_use_CoPPO:
-            prcl_clip_param = self.args.prcl_max_clip_param
+            prcl_clip_param = self.args.clip_param
             adv_targ_ags = split_chunks_into_n_ags(self.args, adv_targ)
             imp_weights_ags = split_chunks_into_n_ags(self.args, imp_weights)
             active_masks_batch_ags = split_chunks_into_n_ags(self.args, active_masks_batch)
             state_batch_ags = split_chunks_into_n_ags(self.args, state_batch)
             if self.args.cuda:
                 state_batch_ags = state_batch_ags.cuda()
-            if self.args.if_detach_others:
-                prod_ratios = []
+                 # for surr1
+            ratio = torch.prod(imp_weights_ags, dim=-2, keepdim=True).repeat(1, 1, n_agents, 1)
+            # for surr2
+            if self.args.if_double_clip:
                 prod_ratios_for_surr2 = []
                 for i in range(self.args.n_agents):
                     ratios = imp_weights_ags.clone()
                     ratios[:, :, i, :] = torch.ones_like(ratios[:, :, i, :])
-                    prod_others_ratio_i = torch.prod(ratios, dim=-2).squeeze().detach()
-                    if self.args.if_double_clip:
-                        inner_eps = self.args.double_clip_inner_eps
-                        prod_others_ratio_i_for_surr2 = torch.clamp(prod_others_ratio_i, 1-inner_eps, 1+inner_eps)
-                        prod_others_i_for_surr2 = prod_others_ratio_i_for_surr2 * imp_weights_ags[:, :, i, :].squeeze()
-                        prod_ratios_for_surr2.append(prod_others_i_for_surr2)
-                    prod_ratios_i = prod_others_ratio_i * imp_weights_ags[:, :, i, :].squeeze()
-                    prod_ratios.append(prod_ratios_i)
-                ratio = torch.stack(prod_ratios, dim=-1).unsqueeze(-1)
-                if self.args.if_double_clip:
-                    ratio_for_surr2 = torch.stack(prod_ratios_for_surr2, dim=-1).unsqueeze(-1)
-            else:
-                # for surr1
-                ratio = torch.prod(imp_weights_ags, dim=-2, keepdim=True).repeat(1, 1, n_agents, 1)
-                # for surr2
-                if self.args.if_double_clip:
-                    prod_ratios_for_surr2 = []
-                    for i in range(self.args.n_agents):
-                        ratios = imp_weights_ags.clone()
-                        ratios[:, :, i, :] = torch.ones_like(ratios[:, :, i, :])
-                        prod_others_ratio_i = torch.prod(ratios, dim=-2).squeeze()
-                        inner_eps = self.args.double_clip_inner_eps
-                        prod_others_ratio_i_for_surr2 = torch.clamp(prod_others_ratio_i, 1-inner_eps, 1+inner_eps)
-                        prod_others_i_for_surr2 = prod_others_ratio_i_for_surr2 * imp_weights_ags[:, :, i, :].squeeze()
-                        prod_ratios_for_surr2.append(prod_others_i_for_surr2)
-                    ratio_for_surr2 = torch.stack(prod_ratios_for_surr2, dim=-1).unsqueeze(-1)
+                    prod_others_ratio_i = torch.prod(ratios, dim=-2).squeeze()
+                    inner_eps = self.args.double_clip_inner_eps
+                    prod_others_ratio_i_for_surr2 = torch.clamp(prod_others_ratio_i, 1-inner_eps, 1+inner_eps)
+                    prod_others_i_for_surr2 = prod_others_ratio_i_for_surr2 * imp_weights_ags[:, :, i, :].squeeze()
+                    prod_ratios_for_surr2.append(prod_others_i_for_surr2)
+                ratio_for_surr2 = torch.stack(prod_ratios_for_surr2, dim=-1).unsqueeze(-1)
             if self.args.clip_before_prod:
                 clipped_ratio = torch.prod(torch.clamp(imp_weights_ags,
                                                         1.0 - self.args.clpr_clip_param, 
